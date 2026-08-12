@@ -26,24 +26,24 @@
 
         <article class="module">
           <h2>1. Setup, instalación y autenticación</h2>
-          <p>CLI de Claude Code, API key de Anthropic y arranque del agente.</p>
+          <p>CLI de Claude Code, login con Claude.ai y <code>ANTHROPIC_API_KEY</code>.</p>
 
           <div class="question">
-            <h3>1. ¿Cuál es la práctica recomendada para autenticar Claude Code en un entorno de equipo?</h3>
+            <h3>1. Según la documentación oficial, ¿cuál es la práctica recomendada para autenticar Claude Code en un equipo?</h3>
             <div class="options">
-              <label class="option"><input type="radio" name="q1" value="ci-personal" required> Usar el login personal de cada desarrollador dentro de CI.</label>
-              <label class="option"><input type="radio" name="q1" value="env-secret"> <code>ANTHROPIC_API_KEY</code> (o login de Claude) por entorno, en un secret manager, nunca en el repo.</label>
+              <label class="option"><input type="radio" name="q1" value="ci-personal" required> Usar el login personal de cada desarrollador dentro de pipelines de CI.</label>
+              <label class="option"><input type="radio" name="q1" value="team-login"> Claude for Teams/Enterprise: cada persona inicia sesión con su cuenta Claude.ai (o API key en secret manager, nunca compartida).</label>
               <label class="option"><input type="radio" name="q1" value="shared-key"> Compartir una API key en un canal de Slack.</label>
               <label class="option"><input type="radio" name="q1" value="no-auth"> Evitar autenticación para no bloquear el flujo.</label>
             </div>
           </div>
 
           <div class="question">
-            <h3>2. ¿Qué flujo usas para autenticarte antes de trabajar con Claude Code?</h3>
+            <h3>2. ¿Qué ocurre al ejecutar <code>claude</code> por primera vez?</h3>
             <div class="options">
-              <label class="option"><input type="radio" name="q2" value="claude-login" required> Login de Claude Code (<code>claude</code>) o variable <code>ANTHROPIC_API_KEY</code>.</label>
-              <label class="option"><input type="radio" name="q2" value="hardcoded"> Pegar la API key en el código fuente.</label>
-              <label class="option"><input type="radio" name="q2" value="gcloud-az-login"> <code>gcloud auth login</code> / <code>az login</code> (eso es Cloud Code de Google, no Claude Code).</label>
+              <label class="option"><input type="radio" name="q2" value="claude-login" required> Abre el login en el navegador; si existe <code>ANTHROPIC_API_KEY</code>, pide aprobar esa clave.</label>
+              <label class="option"><input type="radio" name="q2" value="hardcoded"> Hay que pegar la API key en el código fuente.</label>
+              <label class="option"><input type="radio" name="q2" value="gcloud-az-login"> Hay que correr <code>gcloud auth login</code> / <code>az login</code> (eso es Cloud Code de Google).</label>
               <label class="option"><input type="radio" name="q2" value="skip"> No es necesario autenticarse.</label>
             </div>
           </div>
@@ -62,25 +62,25 @@
 
         <article class="module">
           <h2>2. Gestión de contexto</h2>
-          <p>CLAUDE.md, .claudeignore, inclusión de archivos y consumo de tokens.</p>
+          <p>CLAUDE.md, ventana de contexto, @archivos y consumo de tokens.</p>
 
           <div class="question">
-            <h3>4. ¿Para qué sirve <code>.claudeignore</code>?</h3>
+            <h3>4. ¿Para qué sirve <code>CLAUDE.md</code>?</h3>
             <div class="options">
-              <label class="option"><input type="radio" name="q4" value="ignore-noise" required> Excluir archivos ruidosos o sensibles del contexto que Claude Code envía al modelo.</label>
+              <label class="option"><input type="radio" name="q4" value="claude-md" required> Instrucciones persistentes (estándares, arquitectura, comandos) que Claude lee al inicio de cada sesión.</label>
               <label class="option"><input type="radio" name="q4" value="deploy"> Definir el manifiesto de despliegue a Cloud Run.</label>
-              <label class="option"><input type="radio" name="q4" value="lint"> Reemplazar ESLint y Prettier.</label>
+              <label class="option"><input type="radio" name="q4" value="hard-deny"> Bloquear herramientas con enforcement duro (eso lo hacen permisos y hooks, no CLAUDE.md).</label>
               <label class="option"><input type="radio" name="q4" value="cache"> Cachear dependencias de npm/pip.</label>
             </div>
           </div>
 
           <div class="question">
-            <h3>5. Si Claude “olvida” archivos clave o se dispara el consumo de tokens, ¿qué haces primero?</h3>
+            <h3>5. Si el contexto se llena y Claude “olvida” instrucciones, ¿qué haces primero?</h3>
             <div class="options">
-              <label class="option"><input type="radio" name="q5" value="curate-context" required> Curar el contexto: CLAUDE.md, @archivos relevantes y excluir logs, dist y secretos.</label>
+              <label class="option"><input type="radio" name="q5" value="curate-context" required> Curar contexto: CLAUDE.md conciso, @archivos relevantes, respetar <code>.gitignore</code> y compactar la sesión.</label>
               <label class="option"><input type="radio" name="q5" value="paste-all"> Pegar todo el repositorio en el chat.</label>
               <label class="option"><input type="radio" name="q5" value="raise-temp"> Subir la temperatura del modelo.</label>
-              <label class="option"><input type="radio" name="q5" value="disable-ignore"> Vaciar <code>.claudeignore</code> para que vea todo.</label>
+              <label class="option"><input type="radio" name="q5" value="disable-ignore"> Vaciar <code>.gitignore</code> para que vea node_modules y dist.</label>
             </div>
           </div>
         </article>
@@ -90,19 +90,19 @@
           <p>Backend, frontend y generación de tests con Claude Code.</p>
 
           <div class="question">
-            <h3>6. Al pedir a Claude Code un endpoint FastAPI, ¿cuál es el mejor prompt?</h3>
+            <h3>6. Al pedir un endpoint FastAPI, ¿cuál es el flujo recomendado por la documentación?</h3>
             <div class="options">
-              <label class="option"><input type="radio" name="q6" value="spec-first" required> Dar contrato (ruta, schema, errores) y pedir código + tests.</label>
-              <label class="option"><input type="radio" name="q6" value="make-app"> “Hazme una app” sin más detalle.</label>
+              <label class="option"><input type="radio" name="q6" value="spec-first" required> Explorar/planear primero, dar contrato (ruta, schema) y pedir que implemente y corra tests.</label>
+              <label class="option"><input type="radio" name="q6" value="make-app"> “Hazme una app” sin más detalle y aceptar el primer diff.</label>
               <label class="option"><input type="radio" name="q6" value="copy-so"> Pegar un snippet de Stack Overflow sin contexto del repo.</label>
-              <label class="option"><input type="radio" name="q6" value="skip-review"> Aceptar el diff completo sin revisar.</label>
+              <label class="option"><input type="radio" name="q6" value="skip-review"> Saltar plan mode y no verificar con tests.</label>
             </div>
           </div>
 
           <div class="question">
-            <h3>7. Para UI, ¿qué práctica reduce alucinaciones de componentes?</h3>
+            <h3>7. Para UI, ¿qué práctica reduce alucinaciones según las best practices?</h3>
             <div class="options">
-              <label class="option"><input type="radio" name="q7" value="design-system" required> Referenciar el design system, rutas reales y estado existente.</label>
+              <label class="option"><input type="radio" name="q7" value="design-system" required> Referenciar el design system real y, si aplica, comparar con un screenshot del diseño.</label>
               <label class="option"><input type="radio" name="q7" value="new-stack"> Pedir un stack distinto al del proyecto.</label>
               <label class="option"><input type="radio" name="q7" value="inline-css-only"> Ignorar CSS existente y generar estilos inline siempre.</label>
               <label class="option"><input type="radio" name="q7" value="no-a11y"> Omitir accesibilidad para ir más rápido.</label>
@@ -123,14 +123,14 @@
 
         <article class="module">
           <h2>4. Despliegue local, debugging y seguridad</h2>
-          <p>Permisos de herramientas, hooks y detección de secretos.</p>
+          <p>Permisos en settings.json, hooks y secretos.</p>
 
           <div class="question">
-            <h3>9. ¿Qué rol cumplen los permisos Allow/Deny (y los hooks) en Claude Code?</h3>
+            <h3>9. ¿Qué diferencia hay entre <code>CLAUDE.md</code> y los permisos Allow/Deny?</h3>
             <div class="options">
-              <label class="option"><input type="radio" name="q9" value="tool-permissions" required> Limitar qué comandos y archivos puede ejecutar el agente en el flujo local.</label>
-              <label class="option"><input type="radio" name="q9" value="prod-only"> Solo se usan en producción, nunca en local.</label>
-              <label class="option"><input type="radio" name="q9" value="db"> Reemplazan la base de datos.</label>
+              <label class="option"><input type="radio" name="q9" value="tool-permissions" required> CLAUDE.md guía al modelo; <code>permissions</code> y hooks en <code>.claude/settings.json</code> los aplica el cliente, aunque Claude intente otra cosa.</label>
+              <label class="option"><input type="radio" name="q9" value="prod-only"> Los permisos solo existen en producción, nunca en local.</label>
+              <label class="option"><input type="radio" name="q9" value="same-thing"> Son lo mismo: un Allow en CLAUDE.md bloquea Bash igual que settings.json.</label>
               <label class="option"><input type="radio" name="q9" value="ci-secret"> Guardan secretos de CI dentro del Dockerfile.</label>
             </div>
           </div>

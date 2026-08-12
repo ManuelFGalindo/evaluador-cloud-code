@@ -24,9 +24,9 @@ AZURE_KEY = os.getenv("AZURE_AI_FOUNDRY_KEY", "")
 AZURE_MODEL = os.getenv("AZURE_AI_FOUNDRY_MODEL", "gpt-4o")
 
 CORRECT_ANSWERS = {
-    "q1": "env-secret",
+    "q1": "team-login",
     "q2": "claude-login",
-    "q4": "ignore-noise",
+    "q4": "claude-md",
     "q5": "curate-context",
     "q6": "spec-first",
     "q7": "design-system",
@@ -35,9 +35,20 @@ CORRECT_ANSWERS = {
 }
 
 SYSTEM_PROMPT = """
-Eres un Evaluador Senior de Claude Code (Anthropic) y asistencia de IA en desarrollo Fullstack.
+Eres un Evaluador Senior de Claude Code (Anthropic), según la documentación oficial:
+https://code.claude.com/docs/
+
 No confundas Claude Code con Google Cloud Code.
-Analiza las respuestas del desarrollador y responde ÚNICAMENTE un JSON válido, sin markdown, con esta forma:
+
+Conceptos oficiales a usar en el diagnóstico:
+- Autenticación: login con Claude.ai (Pro/Max/Teams/Enterprise) o ANTHROPIC_API_KEY; en equipos, Claude for Teams/Enterprise.
+- CLAUDE.md: instrucciones persistentes al inicio de cada sesión (contexto, no enforcement duro). /init para generarlo.
+- Contexto: la ventana se llena rápido; curar CLAUDE.md, @archivos, respetar .gitignore, compactar.
+- Best practices: explorar y planear (plan mode) antes de codear; dar a Claude una forma de verificar (tests, build, screenshot).
+- Permisos: permissions.allow/deny en .claude/settings.json los aplica el cliente. Hooks (PreToolUse) para bloqueos deterministas.
+- Secretos: no commitear keys; CLAUDE.local.md y settings.local.json van en gitignore.
+
+Analiza las respuestas y responde ÚNICAMENTE un JSON válido, sin markdown, con esta forma:
 
 {
   "score": 0,
@@ -54,7 +65,7 @@ Reglas:
 - score es un entero 0-100.
 - level debe ser exactamente: Principiante, Intermedio o Avanzado.
 - Usa Principiante si score < 50, Intermedio si 50-79, Avanzado si >= 80.
-- training_plan debe tener 4 semanas, una por módulo: autenticación Claude Code, contexto (CLAUDE.md / .claudeignore / tokens), fullstack+tests, permisos/hooks/secretos.
+- training_plan: 4 semanas alineadas a docs oficiales (auth, CLAUDE.md/contexto, plan+tests, permisos/hooks/secretos).
 - Escribe todo en español, tono profesional y concreto.
 """
 
@@ -96,31 +107,31 @@ def local_score(answers: dict) -> dict:
         ),
         "strengths": ["Completó la evaluación de los 4 módulos de Claude Code."],
         "gaps": [
-            "Autenticación con ANTHROPIC_API_KEY o login de Claude Code",
-            "Curado de contexto, CLAUDE.md y .claudeignore",
-            "Generación de tests con Claude Code",
-            "Permisos Allow/Deny, hooks y rotación de secretos",
+            "Login con Claude.ai / Claude for Teams y ANTHROPIC_API_KEY",
+            "CLAUDE.md, /init y gestión de la ventana de contexto",
+            "Plan mode y verificación con tests o screenshots",
+            "permissions/hooks en .claude/settings.json y rotación de secretos",
         ],
         "training_plan": [
             {
                 "week": "Semana 1",
                 "topic": "Setup y autenticación",
-                "desc": "Instalar la CLI de Claude Code y practicar login o ANTHROPIC_API_KEY en un secret manager.",
+                "desc": "Instalar la CLI (docs oficiales) y practicar login con Claude.ai o ANTHROPIC_API_KEY. Ver https://code.claude.com/docs/en/iam",
             },
             {
                 "week": "Semana 2",
-                "topic": "Gestión de contexto",
-                "desc": "Diseñar CLAUDE.md y .claudeignore, y medir consumo de tokens al incluir archivos.",
+                "topic": "CLAUDE.md y contexto",
+                "desc": "Crear CLAUDE.md con /init, reglas concisas y medir tokens. Ver https://code.claude.com/docs/en/memory",
             },
             {
                 "week": "Semana 3",
-                "topic": "Fullstack asistido",
-                "desc": "Generar un endpoint + UI + tests a partir de un contrato claro, revisando cada diff.",
+                "topic": "Plan, código y tests",
+                "desc": "Usar plan mode, dar contrato y una verificación (tests/build). Ver https://code.claude.com/docs/en/best-practices",
             },
             {
                 "week": "Semana 4",
-                "topic": "Permisos y seguridad",
-                "desc": "Configurar Allow/Deny y hooks, y un flujo de detección/rotación de secretos.",
+                "topic": "Permisos, hooks y secretos",
+                "desc": "Configurar permissions.allow/deny y PreToolUse hooks. Ver https://code.claude.com/docs/en/permissions",
             },
         ],
     }
