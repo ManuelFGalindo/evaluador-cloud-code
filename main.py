@@ -24,18 +24,19 @@ AZURE_KEY = os.getenv("AZURE_AI_FOUNDRY_KEY", "")
 AZURE_MODEL = os.getenv("AZURE_AI_FOUNDRY_MODEL", "gpt-4o")
 
 CORRECT_ANSWERS = {
-    "q1": "service-account",
-    "q2": "gcloud-az-login",
+    "q1": "env-secret",
+    "q2": "claude-login",
     "q4": "ignore-noise",
     "q5": "curate-context",
     "q6": "spec-first",
     "q7": "design-system",
-    "q9": "inner-loop",
+    "q9": "tool-permissions",
     "q10": "rotate-remove",
 }
 
 SYSTEM_PROMPT = """
-Eres un Evaluador Senior de Cloud Code y extensiones de asistencia de IA.
+Eres un Evaluador Senior de Claude Code (Anthropic) y asistencia de IA en desarrollo Fullstack.
+No confundas Claude Code con Google Cloud Code.
 Analiza las respuestas del desarrollador y responde ÚNICAMENTE un JSON válido, sin markdown, con esta forma:
 
 {
@@ -53,11 +54,11 @@ Reglas:
 - score es un entero 0-100.
 - level debe ser exactamente: Principiante, Intermedio o Avanzado.
 - Usa Principiante si score < 50, Intermedio si 50-79, Avanzado si >= 80.
-- training_plan debe tener 4 semanas, una por módulo: autenticación, contexto/tokens, fullstack+tests, deploy/seguridad.
+- training_plan debe tener 4 semanas, una por módulo: autenticación Claude Code, contexto (CLAUDE.md / .claudeignore / tokens), fullstack+tests, permisos/hooks/secretos.
 - Escribe todo en español, tono profesional y concreto.
 """
 
-app = FastAPI(title="Evaluador Cloud Code")
+app = FastAPI(title="Evaluador Claude Code")
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
@@ -93,33 +94,33 @@ def local_score(answers: dict) -> dict:
             "El diagnóstico local se usó porque Azure AI Foundry no estaba disponible. "
             "Revisa autenticación, contexto, generación de tests y secretos."
         ),
-        "strengths": ["Completó la evaluación de los 4 módulos de Cloud Code."],
+        "strengths": ["Completó la evaluación de los 4 módulos de Claude Code."],
         "gaps": [
-            "Autenticación con Service Accounts y ADC",
-            "Curado de contexto y .cloudeignore",
-            "Generación de tests con IA",
-            "Skaffold/Cloud Run local y rotación de secretos",
+            "Autenticación con ANTHROPIC_API_KEY o login de Claude Code",
+            "Curado de contexto, CLAUDE.md y .claudeignore",
+            "Generación de tests con Claude Code",
+            "Permisos Allow/Deny, hooks y rotación de secretos",
         ],
         "training_plan": [
             {
                 "week": "Semana 1",
                 "topic": "Setup y autenticación",
-                "desc": "Practicar gcloud/az login, ADC y Service Accounts de menor privilegio.",
+                "desc": "Instalar la CLI de Claude Code y practicar login o ANTHROPIC_API_KEY en un secret manager.",
             },
             {
                 "week": "Semana 2",
                 "topic": "Gestión de contexto",
-                "desc": "Diseñar .cloudeignore y medir consumo de tokens al incluir archivos.",
+                "desc": "Diseñar CLAUDE.md y .claudeignore, y medir consumo de tokens al incluir archivos.",
             },
             {
                 "week": "Semana 3",
                 "topic": "Fullstack asistido",
-                "desc": "Generar un endpoint + UI + tests a partir de un contrato claro.",
+                "desc": "Generar un endpoint + UI + tests a partir de un contrato claro, revisando cada diff.",
             },
             {
                 "week": "Semana 4",
-                "topic": "Deploy y seguridad",
-                "desc": "Inner loop con Skaffold/emulador y pipeline de detección de secretos.",
+                "topic": "Permisos y seguridad",
+                "desc": "Configurar Allow/Deny y hooks, y un flujo de detección/rotación de secretos.",
             },
         ],
     }
@@ -201,7 +202,7 @@ async def generate_report(
     os.close(fd)
     HTML(string=html, base_url=str(BASE_DIR)).write_pdf(pdf_path)
 
-    filename = f"Reporte_CloudCode_{dev_name.replace(' ', '_')}.pdf"
+    filename = f"Reporte_ClaudeCode_{dev_name.replace(' ', '_')}.pdf"
     return FileResponse(
         pdf_path,
         media_type="application/pdf",

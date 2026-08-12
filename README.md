@@ -1,6 +1,6 @@
-# Evaluador Cloud Code
+# Evaluador Claude Code
 
-Aplicación web en **FastAPI** para evaluar habilidades de desarrolladores Fullstack en Cloud Code y extensiones de asistencia de IA. Genera un diagnóstico con **Azure AI Foundry (GPT-4o)** y descarga un **informe PDF**.
+Aplicación web en **FastAPI** para evaluar habilidades de desarrolladores Fullstack en **Claude Code** (Anthropic) y asistencia de IA. Genera un diagnóstico con **Azure AI Foundry (GPT-4o)** y descarga un **informe PDF**.
 
 Repositorio: [github.com/ManuelFGalindo/evaluador-cloud-code](https://github.com/ManuelFGalindo/evaluador-cloud-code)
 
@@ -13,10 +13,10 @@ Repositorio: [github.com/ManuelFGalindo/evaluador-cloud-code](https://github.com
 
 ## Módulos de evaluación
 
-- **Setup, instalación y autenticación** — Service Accounts, login GCP/Azure
-- **Gestión de contexto** — `.cloudeignore`, inclusión de archivos, consumo de tokens
+- **Setup, instalación y autenticación** — CLI de Claude Code, `ANTHROPIC_API_KEY` / login
+- **Gestión de contexto** — `CLAUDE.md`, `.claudeignore`, inclusión de archivos, consumo de tokens
 - **Desarrollo Fullstack asistido por IA** — backend, frontend y generación de tests
-- **Despliegue local, debugging y seguridad** — Skaffold, emuladores de Cloud Run, detección de secretos
+- **Despliegue local, debugging y seguridad** — permisos Allow/Deny, hooks, detección de secretos
 
 El informe incluye puntaje (%), nivel (Principiante / Intermedio / Avanzado), resumen ejecutivo, brechas de capacitación y una ruta semanal sugerida.
 
