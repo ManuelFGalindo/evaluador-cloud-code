@@ -29,10 +29,12 @@
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       padding: 12px 14px;
-      width: 50%;
     }
     .score { font-size: 28px; color: #2563eb; font-weight: 700; }
     .level { font-size: 18px; font-weight: 700; }
+    table.levels { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    table.levels th { background: #0f172a; color: white; text-align: left; padding: 8px 10px; }
+    table.levels td { border: 1px solid #e2e8f0; padding: 8px 10px; background: #ffffff; }
     h2 {
       font-size: 14px;
       margin: 22px 0 8px;
@@ -91,6 +93,24 @@
         <div class="level">{{ report.level }}</div>
       </td>
     </tr>
+  </table>
+
+  <h2>Desempeño por nivel</h2>
+  <table class="levels">
+    <thead>
+      <tr>
+        <th>Nivel</th>
+        <th>Puntaje</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for name, value in report.level_scores.items() %}
+      <tr>
+        <td>{{ name }}</td>
+        <td>{{ value }}%</td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
 
   <h2>Resumen ejecutivo</h2>

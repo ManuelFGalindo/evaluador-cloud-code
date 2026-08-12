@@ -13,10 +13,9 @@ Repositorio: [github.com/ManuelFGalindo/evaluador-cloud-code](https://github.com
 
 ## Módulos de evaluación
 
-- **Setup, instalación y autenticación** — CLI, login Claude.ai / Teams, `ANTHROPIC_API_KEY`
-- **Gestión de contexto** — `CLAUDE.md`, ventana de contexto, `@` archivos, `.gitignore`
-- **Desarrollo Fullstack asistido por IA** — plan mode, backend, frontend y tests
-- **Despliegue local, debugging y seguridad** — `permissions` en `.claude/settings.json`, hooks, secretos
+- **Principiante** — instalar/arrancar `claude`, login, Teams, `CLAUDE.md` y `/init`
+- **Intermedio** — contexto, plan mode, verificación con tests/screenshots, git/PRs
+- **Avanzado** — `permissions`, hooks, MCP y secretos
 
 Documentación oficial: [code.claude.com/docs](https://code.claude.com/docs/)
 

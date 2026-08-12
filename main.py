@@ -24,35 +24,41 @@ AZURE_KEY = os.getenv("AZURE_AI_FOUNDRY_KEY", "")
 AZURE_MODEL = os.getenv("AZURE_AI_FOUNDRY_MODEL", "gpt-4o")
 
 CORRECT_ANSWERS = {
-    "q1": "team-login",
+    "q1": "cd-claude",
     "q2": "claude-login",
+    "q3": "team-login",
     "q4": "claude-md",
     "q5": "curate-context",
-    "q6": "spec-first",
-    "q7": "design-system",
+    "q6": "plan-mode",
+    "q7": "verify",
+    "q8": "git-native",
     "q9": "tool-permissions",
-    "q10": "rotate-remove",
+    "q10": "hooks",
+    "q11": "mcp",
+    "q12": "rotate-remove",
+}
+
+LEVEL_GROUPS = {
+    "Principiante": ["q1", "q2", "q3", "q4"],
+    "Intermedio": ["q5", "q6", "q7", "q8"],
+    "Avanzado": ["q9", "q10", "q11", "q12"],
 }
 
 SYSTEM_PROMPT = """
-Eres un Evaluador Senior de Claude Code (Anthropic), según la documentación oficial:
-https://code.claude.com/docs/
-
+Eres un Evaluador Senior de Claude Code (Anthropic), según https://code.claude.com/docs/
 No confundas Claude Code con Google Cloud Code.
 
-Conceptos oficiales a usar en el diagnóstico:
-- Autenticación: login con Claude.ai (Pro/Max/Teams/Enterprise) o ANTHROPIC_API_KEY; en equipos, Claude for Teams/Enterprise.
-- CLAUDE.md: instrucciones persistentes al inicio de cada sesión (contexto, no enforcement duro). /init para generarlo.
-- Contexto: la ventana se llena rápido; curar CLAUDE.md, @archivos, respetar .gitignore, compactar.
-- Best practices: explorar y planear (plan mode) antes de codear; dar a Claude una forma de verificar (tests, build, screenshot).
-- Permisos: permissions.allow/deny en .claude/settings.json los aplica el cliente. Hooks (PreToolUse) para bloqueos deterministas.
-- Secretos: no commitear keys; CLAUDE.local.md y settings.local.json van en gitignore.
+La evaluación va por niveles:
+- Principiante (q1-q4): instalar/arrancar `claude`, login, Teams, CLAUDE.md y /init.
+- Intermedio (q5-q8): contexto/tokens, plan mode, verificación con tests/build/screenshot, git/PRs.
+- Avanzado (q9-q12): permissions vs CLAUDE.md, hooks PreToolUse, MCP, secretos y gitignore de settings.local.json.
 
-Analiza las respuestas y responde ÚNICAMENTE un JSON válido, sin markdown, con esta forma:
+Analiza las respuestas y responde ÚNICAMENTE un JSON válido, sin markdown:
 
 {
   "score": 0,
   "level": "Principiante",
+  "level_scores": {"Principiante": 0, "Intermedio": 0, "Avanzado": 0},
   "summary": "Resumen ejecutivo en 2-4 oraciones",
   "strengths": ["fortaleza 1", "fortaleza 2"],
   "gaps": ["brecha 1", "brecha 2"],
@@ -62,11 +68,10 @@ Analiza las respuestas y responde ÚNICAMENTE un JSON válido, sin markdown, con
 }
 
 Reglas:
-- score es un entero 0-100.
-- level debe ser exactamente: Principiante, Intermedio o Avanzado.
-- Usa Principiante si score < 50, Intermedio si 50-79, Avanzado si >= 80.
-- training_plan: 4 semanas alineadas a docs oficiales (auth, CLAUDE.md/contexto, plan+tests, permisos/hooks/secretos).
-- Escribe todo en español, tono profesional y concreto.
+- score entero 0-100.
+- level: Principiante / Intermedio / Avanzado (usa Principiante <50, Intermedio 50-79, Avanzado >=80).
+- training_plan: 3 semanas, una por nivel, citando páginas de code.claude.com/docs.
+- Español, tono profesional.
 """
 
 app = FastAPI(title="Evaluador Claude Code")
@@ -83,14 +88,18 @@ def get_azure_client() -> Optional[ChatCompletionsClient]:
     )
 
 
+def score_levels(answers: dict) -> dict:
+    result = {}
+    for name, keys in LEVEL_GROUPS.items():
+        hits = sum(1 for key in keys if answers.get(key) == CORRECT_ANSWERS[key])
+        result[name] = round((hits / len(keys)) * 100)
+    return result
+
+
 def local_score(answers: dict) -> dict:
-    points = 0.0
-    total = 10.0
-    for key, expected in CORRECT_ANSWERS.items():
-        points += 1 if answers.get(key) == expected else 0
-    for key in ("q3", "q8"):
-        points += int(answers.get(key, "1")) / 5
-    score = round((points / total) * 100)
+    level_scores = score_levels(answers)
+    points = sum(1 for key, expected in CORRECT_ANSWERS.items() if answers.get(key) == expected)
+    score = round((points / len(CORRECT_ANSWERS)) * 100)
     if score >= 80:
         level = "Avanzado"
     elif score >= 50:
@@ -100,38 +109,34 @@ def local_score(answers: dict) -> dict:
     return {
         "score": score,
         "level": level,
+        "level_scores": level_scores,
         "summary": (
             f"El desarrollador obtuvo {score}% y un nivel {level}. "
-            "El diagnóstico local se usó porque Azure AI Foundry no estaba disponible. "
-            "Revisa autenticación, contexto, generación de tests y secretos."
+            f"Principiante {level_scores['Principiante']}%, "
+            f"Intermedio {level_scores['Intermedio']}%, "
+            f"Avanzado {level_scores['Avanzado']}%."
         ),
-        "strengths": ["Completó la evaluación de los 4 módulos de Claude Code."],
+        "strengths": ["Completó la evaluación por niveles de Claude Code."],
         "gaps": [
-            "Login con Claude.ai / Claude for Teams y ANTHROPIC_API_KEY",
-            "CLAUDE.md, /init y gestión de la ventana de contexto",
-            "Plan mode y verificación con tests o screenshots",
-            "permissions/hooks en .claude/settings.json y rotación de secretos",
+            "Instalación, login y CLAUDE.md (Principiante)",
+            "Plan mode, contexto y verificación con tests (Intermedio)",
+            "Permisos, hooks, MCP y secretos (Avanzado)",
         ],
         "training_plan": [
             {
-                "week": "Semana 1",
-                "topic": "Setup y autenticación",
-                "desc": "Instalar la CLI (docs oficiales) y practicar login con Claude.ai o ANTHROPIC_API_KEY. Ver https://code.claude.com/docs/en/iam",
+                "week": "Semana 1 · Principiante",
+                "topic": "Setup y CLAUDE.md",
+                "desc": "Instalar CLI, login y /init. https://code.claude.com/docs/en/quickstart",
             },
             {
-                "week": "Semana 2",
-                "topic": "CLAUDE.md y contexto",
-                "desc": "Crear CLAUDE.md con /init, reglas concisas y medir tokens. Ver https://code.claude.com/docs/en/memory",
+                "week": "Semana 2 · Intermedio",
+                "topic": "Plan mode y verificación",
+                "desc": "Contexto, plan mode y tests/screenshots. https://code.claude.com/docs/en/best-practices",
             },
             {
-                "week": "Semana 3",
-                "topic": "Plan, código y tests",
-                "desc": "Usar plan mode, dar contrato y una verificación (tests/build). Ver https://code.claude.com/docs/en/best-practices",
-            },
-            {
-                "week": "Semana 4",
-                "topic": "Permisos, hooks y secretos",
-                "desc": "Configurar permissions.allow/deny y PreToolUse hooks. Ver https://code.claude.com/docs/en/permissions",
+                "week": "Semana 3 · Avanzado",
+                "topic": "Permisos, hooks y MCP",
+                "desc": "settings.json, hooks y MCP. https://code.claude.com/docs/en/permissions",
             },
         ],
     }
@@ -199,10 +204,12 @@ async def generate_report(
     answers: str = Form(...),
 ):
     parsed_answers = json.loads(answers)
+    level_scores = score_levels(parsed_answers)
     try:
         report = diagnose_with_azure(dev_name, dev_role, parsed_answers)
     except Exception:
         report = local_score(parsed_answers)
+    report["level_scores"] = level_scores
 
     html = templates.get_template("report_template.html").render(
         developer={"name": dev_name, "role": dev_role},
