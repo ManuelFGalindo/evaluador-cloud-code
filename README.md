@@ -36,7 +36,7 @@ evaluador-cloud-code/
 
 ## Requisitos
 
-- Python 3.10 o superior
+- Python 3.12 (en Render se fija con `.python-version`; no uses 3.14)
 - Credenciales de Azure AI Foundry (opcional: si no están configuradas, se usa un diagnóstico local)
 
 ## Instalación
@@ -87,9 +87,19 @@ shared-mime-info
 
 ## Despliegue en Render
 
+Render elige Python 3.14 por defecto y **pydantic 2.7.4 no compila en 3.14**. Este repo fija **Python 3.12.8**.
+
 1. Conecta este repositorio en [Render](https://render.com)
 2. Crea un **Web Service** con runtime Python
-3. Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-4. Configura las variables de entorno `AZURE_AI_FOUNDRY_ENDPOINT`, `AZURE_AI_FOUNDRY_KEY` y `AZURE_AI_FOUNDRY_MODEL`
+3. Build command: `pip install -r requirements.txt`
+4. Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+5. En Environment agrega:
+   - `PYTHON_VERSION` = `3.12.8`
+   - `AZURE_AI_FOUNDRY_ENDPOINT`
+   - `AZURE_AI_FOUNDRY_KEY`
+   - `AZURE_AI_FOUNDRY_MODEL` = `gpt-4o`
+6. Redeploy el servicio
+
+WeasyPrint usa el `Aptfile` de la raíz para instalar Pango/Cairo.
 
 No subas el archivo `.env`. Usa `.env.example` como plantilla.
