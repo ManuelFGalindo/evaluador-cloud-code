@@ -81,7 +81,7 @@ label {
   margin-bottom: 8px;
 }
 
-input,
+input[type="text"],
 select {
   width: 100%;
   border: 1px solid var(--border);
@@ -181,9 +181,37 @@ select {
 
 .option {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 10px;
   font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  cursor: pointer;
+  line-height: 1.45;
+}
+
+.option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  margin: 3px 0 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  flex-shrink: 0;
+  accent-color: var(--blue);
+}
+
+.option code {
+  display: inline;
+  font-size: 0.86em;
+  background: #e2e8f0;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
 }
 
 .meta {
