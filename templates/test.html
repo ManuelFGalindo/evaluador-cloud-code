@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuestionario Cloud Code</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card wide">
+      <div class="meta">
+        <div>
+          <strong>{{ dev_name }}</strong>
+          <div>{{ dev_role }}</div>
+        </div>
+        <div>10 preguntas · 4 módulos</div>
+      </div>
+
+      <h1>Evaluación técnica Cloud Code</h1>
+      <p class="lead">Responde con honestidad. El diagnóstico se genera con Azure AI Foundry.</p>
+
+      <form id="eval-form">
+        <input type="hidden" name="dev_name" value="{{ dev_name }}">
+        <input type="hidden" name="dev_role" value="{{ dev_role }}">
+
+        <article class="module">
+          <h2>1. Setup, instalación y autenticación</h2>
+          <p>Service Accounts, login GCP/Azure y arranque de Cloud Code.</p>
+
+          <div class="question">
+            <h3>1. ¿Cuál es la práctica recomendada para autenticar Cloud Code en un entorno de equipo?</h3>
+            <div class="options">
+              <label class="option"><input type="radio" name="q1" value="user-login" required> Usar siempre el login personal de cada desarrollador en CI.</label>
+              <label class="option"><input type="radio" name="q1" value="service-account"> Service Accounts con permisos mínimos y secretos fuera del repo.</label>
+              <label class="option"><input type="radio" name="q1" value="shared-key"> Compartir una API key en un canal de Slack.</label>
+              <label class="option"><input type="radio" name="q1" value="no-auth"> Evitar autenticación para no bloquear el flujo.</label>
+            </div>
+          </div>
+
+          <div class="question">
+            <h3>2. ¿Qué comando o flujo usas para autenticarte en GCP o Azure antes de trabajar con Cloud Code?</h3>
+            <div class="options">
+              <label class="option"><input type="radio" name="q2" value="gcloud-az-login" required> <code>gcloud auth login</code> / <code>az login</code> y luego Application Default Credentials.</label>
+              <label class="option"><input type="radio" name="q2" value="hardcoded"> Pegar credenciales en el código fuente.</label>
+              <label class="option"><input type="radio" name="q2" value="browser-only"> Solo abrir la consola web, sin CLI.</label>
+              <label class="option"><input type="radio" name="q2" value="skip"> No es necesario autenticarse.</label>
+            </div>
+          </div>
+
+          <div class="question">
+            <h3>3. Autoevaluación: dominio de instalación, extensiones y autenticación de Cloud Code (1 = nulo, 5 = experto)</h3>
+            <div class="scale">
+              <label class="option"><input type="radio" name="q3" value="1" required> 1</label>
+              <label class="option"><input type="radio" name="q3" value="2"> 2</label>
+              <label class="option"><input type="radio" name="q3" value="3"> 3</label>
+              <label class="option"><input type="radio" name="q3" value="4"> 4</label>
+              <label class="option"><input type="radio" name="q3" value="5"> 5</label>
+            </div>
+          </div>
+        </article>
+
+        <article class="module">
+          <h2>2. Gestión de contexto</h2>
+          <p>.cloudeignore, inclusión de archivos y consumo de tokens.</p>
+
+          <div class="question">
+            <h3>4. ¿Para qué sirve <code>.cloudeignore</code>?</h3>
+            <div class="options">
+              <label class="option"><input type="radio" name="q4" value="ignore-noise" required> Excluir archivos ruidosos o sensibles del contexto enviado al modelo.</label>
+              <label class="option"><input type="radio" name="q4" value="deploy"> Definir el manifiesto de despliegue a Cloud Run.</label>
+              <label class="option"><input type="radio" name="q4" value="lint"> Reemplazar ESLint y Prettier.</label>
+              <label class="option"><input type="radio" name="q4" value="cache"> Cachear dependencias de npm/pip.</label>
+            </div>
+          </div>
+
+          <div class="question">
+            <h3>5. Si el modelo “olvida” archivos clave o se dispara el consumo de tokens, ¿qué haces primero?</h3>
+            <div class="options">
+              <label class="option"><input type="radio" name="q5" value="curate-context" required> Curar el contexto: incluir solo archivos relevantes y excluir logs, dist y secretos.</label>
+              <label class="option"><input type="radio" name="q5" value="paste-all"> Pegar todo el repositorio en el chat.</label>
+              <label class="option"><input type="radio" name="q5" value="raise-temp"> Subir la temperatura del modelo.</label>
+              <label class="option"><input type="radio" name="q5" value="disable-ignore"> Vaciar <code>.cloudeignore</code> para que vea todo.</label>
+            </div>
+          </div>
+        </article>
+
+        <article class="module">
+          <h2>3. Desarrollo Fullstack asistido por IA</h2>
+          <p>Backend, frontend y generación de tests.</p>
+
+          <div class="question">
+            <h3>6. Al pedir a Cloud Code un endpoint FastAPI, ¿cuál es el mejor prompt?</h3>
+            <div class="options">
+              <label class="option"><input type="radio" name="q6" value="spec-first" required> Dar contrato (ruta, schema, errores) y pedir código + tests.</label>
+              <label class="option"><input type="radio" name="q6" value="make-app"> “Hazme una app” sin más detalle.</label>
+              <label class="option"><input type="radio" name="q6" value="copy-so"> Pegar un snippet de Stack Overflow sin contexto del repo.</label>
+              <label class="option"><input type="radio" name="q6" value="skip-review"> Aceptar el diff completo sin revisar.</label>
+            </div>
+          </div>
+
+          <div class="question">
+            <h3>7. Para UI, ¿qué práctica reduce alucinaciones de componentes?</h3>
+            <div class="options">
+              <label class="option"><input type="radio" name="q7" value="design-system" required> Referenciar el design system, rutas reales y estado existente.</label>
+              <label class="option"><input type="radio" name="q7" value="new-stack"> Pedir un stack distinto al del proyecto.</label>
+              <label class="option"><input type="radio" name="q7" value="inline-css-only"> Ignorar CSS existente y generar estilos inline siempre.</label>
+              <label class="option"><input type="radio" name="q7" value="no-a11y"> Omitir accesibilidad para ir más rápido.</label>
+            </div>
+          </div>
+
+          <div class="question">
+            <h3>8. Autoevaluación: generación de tests (unitarios/e2e) con IA (1 a 5)</h3>
+            <div class="scale">
+              <label class="option"><input type="radio" name="q8" value="1" required> 1</label>
+              <label class="option"><input type="radio" name="q8" value="2"> 2</label>
+              <label class="option"><input type="radio" name="q8" value="3"> 3</label>
+              <label class="option"><input type="radio" name="q8" value="4"> 4</label>
+              <label class="option"><input type="radio" name="q8" value="5"> 5</label>
+            </div>
+          </div>
+        </article>
+
+        <article class="module">
+          <h2>4. Despliegue local, debugging y seguridad</h2>
+          <p>Skaffold, emuladores de Cloud Run y detección de secretos.</p>
+
+          <div class="question">
+            <h3>9. ¿Qué rol cumple Skaffold (o el emulador de Cloud Run) en el flujo local?</h3>
+            <div class="options">
+              <label class="option"><input type="radio" name="q9" value="inner-loop" required> Acelerar el inner loop: build, sync y preview cercano a producción.</label>
+              <label class="option"><input type="radio" name="q9" value="prod-only"> Solo se usa en producción, nunca en local.</label>
+              <label class="option"><input type="radio" name="q9" value="db"> Reemplaza la base de datos.</label>
+              <label class="option"><input type="radio" name="q9" value="ci-secret"> Guarda secretos de CI dentro del Dockerfile.</label>
+            </div>
+          </div>
+
+          <div class="question">
+            <h3>10. Si Cloud Code detecta un secreto en el diff, ¿qué haces?</h3>
+            <div class="options">
+              <label class="option"><input type="radio" name="q10" value="rotate-remove" required> No commitearlo, rotarlo si se filtró y moverlo a un secret manager.</label>
+              <label class="option"><input type="radio" name="q10" value="commit-anyway"> Commitearlo y “ya lo quitamos después”.</label>
+              <label class="option"><input type="radio" name="q10" value="base64"> Codificarlo en Base64 y dejarlo en el repo.</label>
+              <label class="option"><input type="radio" name="q10" value="disable-scan"> Desactivar el escáner de secretos.</label>
+            </div>
+          </div>
+        </article>
+
+        <button class="btn" id="submit-btn" type="submit">Enviar Evaluación</button>
+        <p class="loading" id="loading">Generando diagnóstico y PDF…</p>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("eval-form");
+    const loading = document.getElementById("loading");
+    const submitBtn = document.getElementById("submit-btn");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const answers = {};
+      for (const [key, value] of data.entries()) {
+        if (key.startsWith("q")) answers[key] = value;
+      }
+
+      const payload = new FormData();
+      payload.append("dev_name", data.get("dev_name"));
+      payload.append("dev_role", data.get("dev_role"));
+      payload.append("answers", JSON.stringify(answers));
+
+      loading.style.display = "block";
+      loading.textContent = "Generando diagnóstico y PDF…";
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch("/generate-report", {
+          method: "POST",
+          body: payload
+        });
+
+        if (!response.ok) {
+          loading.textContent = "No se pudo generar el reporte. Revisa las credenciales de Azure.";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "Reporte_CloudCode.pdf";
+        link.click();
+        URL.revokeObjectURL(url);
+        loading.textContent = "Reporte descargado.";
+      } catch (error) {
+        loading.textContent = "Error de red al generar el reporte.";
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

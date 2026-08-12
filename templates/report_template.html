@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reporte Cloud Code - {{ developer.name }}</title>
+  <style>
+    @page { size: A4; margin: 16mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #0f172a;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .banner {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 22px 24px;
+      border-radius: 10px;
+    }
+    .banner h1 { margin: 0 0 6px; font-size: 22px; }
+    .banner p { margin: 0; color: #cbd5e1; }
+    .score-row {
+      margin-top: 16px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .score-row td {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 12px 14px;
+      width: 50%;
+    }
+    .score { font-size: 28px; color: #2563eb; font-weight: 700; }
+    .level { font-size: 18px; font-weight: 700; }
+    h2 {
+      font-size: 14px;
+      margin: 22px 0 8px;
+      color: #2563eb;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 4px;
+    }
+    .box {
+      background: #f8fafc;
+      border-left: 4px solid #2563eb;
+      padding: 12px 14px;
+    }
+    .gaps {
+      background: #fff7ed;
+      border-left: 4px solid #ea580c;
+      padding: 12px 14px;
+    }
+    ul { margin: 8px 0 0 18px; padding: 0; }
+    table.plan {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    table.plan th {
+      background: #0f172a;
+      color: white;
+      text-align: left;
+      padding: 8px 10px;
+    }
+    table.plan td {
+      border: 1px solid #e2e8f0;
+      padding: 8px 10px;
+      background: #ffffff;
+    }
+    .footer {
+      margin-top: 24px;
+      color: #64748b;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <h1>Informe de Evaluación Cloud Code</h1>
+    <p><strong>{{ developer.name }}</strong> · {{ developer.role }}</p>
+  </div>
+
+  <table class="score-row">
+    <tr>
+      <td>
+        <div>Puntaje general</div>
+        <div class="score">{{ report.score }}%</div>
+      </td>
+      <td>
+        <div>Nivel asignado</div>
+        <div class="level">{{ report.level }}</div>
+      </td>
+    </tr>
+  </table>
+
+  <h2>Resumen ejecutivo</h2>
+  <div class="box">{{ report.summary }}</div>
+
+  <h2>Fortalezas</h2>
+  <div class="box">
+    <ul>
+      {% for item in report.strengths %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <h2>Brechas de capacitación</h2>
+  <div class="gaps">
+    <ul>
+      {% for item in report.gaps %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <h2>Ruta de capacitación semanal</h2>
+  <table class="plan">
+    <thead>
+      <tr>
+        <th>Semana</th>
+        <th>Tema</th>
+        <th>Detalle</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in report.training_plan %}
+      <tr>
+        <td>{{ item.week }}</td>
+        <td>{{ item.topic }}</td>
+        <td>{{ item.desc }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="footer">Generado automáticamente con Azure AI Foundry (GPT-4o) · Cloud Code Evaluator</p>
+</body>
+</html>
