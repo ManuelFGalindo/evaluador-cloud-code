@@ -9,7 +9,7 @@ from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
 from dotenv import load_dotenv
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -181,6 +181,7 @@ def cleanup_file(path: str) -> None:
 
 
 @app.get("/", response_class=HTMLResponse)
+@app.head("/")
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
@@ -218,7 +219,11 @@ async def generate_report(
 
     fd, pdf_path = tempfile.mkstemp(suffix=".pdf")
     os.close(fd)
-    HTML(string=html, base_url=str(BASE_DIR)).write_pdf(pdf_path)
+    try:
+        HTML(string=html, base_url=str(BASE_DIR)).write_pdf(pdf_path)
+    except Exception as exc:
+        cleanup_file(pdf_path)
+        raise HTTPException(status_code=500, detail=f"No se pudo generar el PDF: {exc}") from exc
 
     filename = f"Reporte_ClaudeCode_{dev_name.replace(' ', '_')}.pdf"
     return FileResponse(
