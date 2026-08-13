@@ -11,6 +11,7 @@ from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from openai import OpenAI
 from starlette.background import BackgroundTask
 from starlette.middleware.sessions import SessionMiddleware
@@ -339,6 +340,23 @@ def diagnose_with_azure(dev_name: str, dev_role: str, scored: dict) -> dict:
     return report
 
 
+def quiz_signer() -> URLSafeTimedSerializer:
+    return URLSafeTimedSerializer(SESSION_SECRET, salt="quiz-v1")
+
+
+def dump_quiz(quiz: list[dict]) -> str:
+    return quiz_signer().dumps(quiz)
+
+
+def load_quiz(token: str) -> list[dict]:
+    try:
+        return quiz_signer().loads(token, max_age=8 * 3600)
+    except SignatureExpired as exc:
+        raise HTTPException(status_code=400, detail="El examen venció (8 h). Inicia una sesión nueva.") from exc
+    except BadSignature as exc:
+        raise HTTPException(status_code=400, detail="El examen no es válido. Inicia una sesión nueva.") from exc
+
+
 def cleanup_file(path: str) -> None:
     try:
         os.remove(path)
@@ -365,9 +383,6 @@ async def start_eval(
     dev_role: str = Form(...),
 ):
     quiz = build_quiz()
-    request.session["quiz"] = quiz
-    request.session["dev_name"] = dev_name
-    request.session["dev_role"] = dev_role
     return templates.TemplateResponse(
         "test.html",
         {
@@ -375,6 +390,7 @@ async def start_eval(
             "dev_name": dev_name,
             "dev_role": dev_role,
             "sections": group_questions(quiz),
+            "quiz_token": dump_quiz(quiz),
         },
     )
 
@@ -385,10 +401,9 @@ async def generate_report(
     dev_name: str = Form(...),
     dev_role: str = Form(...),
     answers: str = Form(...),
+    quiz_token: str = Form(...),
 ):
-    quiz = request.session.get("quiz")
-    if not quiz:
-        raise HTTPException(status_code=400, detail="La sesión expiró. Vuelve a iniciar la evaluación.")
+    quiz = load_quiz(quiz_token)
     parsed_answers = json.loads(answers)
     scored = score_quiz(quiz, parsed_answers)
     try:

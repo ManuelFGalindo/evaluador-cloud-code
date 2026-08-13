@@ -22,13 +22,15 @@
 
       <h1>Evaluación Claude Code por niveles</h1>
       <p class="lead">
-        Preguntas generadas para esta sesión con Azure AI Foundry, alineadas a la
-        <a href="https://code.claude.com/docs/" target="_blank" rel="noopener">documentación oficial</a>.
+        Preguntas de esta sesión (Azure AI Foundry + docs oficiales).
+        <strong>No hay límite de tiempo</strong> para responder.
+        <a href="https://code.claude.com/docs/" target="_blank" rel="noopener">Documentación</a>.
       </p>
 
       <form id="eval-form">
         <input type="hidden" name="dev_name" value="{{ dev_name }}">
         <input type="hidden" name="dev_role" value="{{ dev_role }}">
+        <input type="hidden" name="quiz_token" value="{{ quiz_token }}">
 
         {% for section in sections %}
         <article class="module {{ section.css }}">
@@ -75,6 +77,7 @@
       payload.append("dev_name", data.get("dev_name"));
       payload.append("dev_role", data.get("dev_role"));
       payload.append("answers", JSON.stringify(answers));
+      payload.append("quiz_token", data.get("quiz_token"));
 
       loading.style.display = "block";
       loading.textContent = "Generando diagnóstico y PDF…";
@@ -87,7 +90,12 @@
         });
 
         if (!response.ok) {
-          loading.textContent = "No se pudo generar el reporte. Si la sesión expiró, cierra sesión e inicia de nuevo.";
+          let detail = "No se pudo generar el reporte.";
+          try {
+            const err = await response.json();
+            detail = err.detail || detail;
+          } catch (e) {}
+          loading.textContent = detail;
           submitBtn.disabled = false;
           return;
         }
