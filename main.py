@@ -23,6 +23,15 @@ AZURE_ENDPOINT = os.getenv("AZURE_AI_FOUNDRY_ENDPOINT", "")
 AZURE_KEY = os.getenv("AZURE_AI_FOUNDRY_KEY", "")
 AZURE_MODEL = os.getenv("AZURE_AI_FOUNDRY_MODEL", "gpt-4o")
 
+
+def normalize_azure_endpoint(url: str) -> str:
+    """El SDK agrega /chat/completions; quita ese sufijo si viene en la URL."""
+    cleaned = (url or "").strip().rstrip("/")
+    suffix = "/chat/completions"
+    if cleaned.endswith(suffix):
+        cleaned = cleaned[: -len(suffix)].rstrip("/")
+    return cleaned
+
 CORRECT_ANSWERS = {
     "q1": "cd-claude",
     "q2": "claude-login",
@@ -83,7 +92,7 @@ def get_azure_client() -> Optional[ChatCompletionsClient]:
     if not AZURE_ENDPOINT or not AZURE_KEY or "tu-key" in AZURE_KEY:
         return None
     return ChatCompletionsClient(
-        endpoint=AZURE_ENDPOINT,
+        endpoint=normalize_azure_endpoint(AZURE_ENDPOINT),
         credential=AzureKeyCredential(AZURE_KEY),
     )
 
