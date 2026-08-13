@@ -69,6 +69,26 @@
       padding: 8px 10px;
       background: #ffffff;
     }
+    table.answers {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 10px;
+    }
+    table.answers th {
+      background: #0f172a;
+      color: white;
+      text-align: left;
+      padding: 6px 8px;
+    }
+    table.answers td {
+      border: 1px solid #e2e8f0;
+      padding: 6px 8px;
+      vertical-align: top;
+      background: #ffffff;
+    }
+    .ok { color: #166534; font-weight: 700; }
+    .bad { color: #b45309; font-weight: 700; }
     .footer {
       margin-top: 24px;
       color: #64748b;
@@ -154,6 +174,38 @@
     </tbody>
   </table>
 
-  <p class="footer">Generado automáticamente con Azure AI Foundry (GPT-4o) · Claude Code Evaluator</p>
+  <h2>Revisión de respuestas</h2>
+  <table class="answers">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Nivel</th>
+        <th>Pregunta</th>
+        <th>Tu respuesta</th>
+        <th>Respuesta correcta</th>
+        <th>Resultado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in report.answers %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ item.level }}</td>
+        <td>{{ item.prompt }}</td>
+        <td>{{ item.chosen }}</td>
+        <td>{{ item.correct }}</td>
+        <td>
+          {% if item.is_correct %}
+          <span class="ok">Correcto</span>
+          {% else %}
+          <span class="bad">Incorrecto</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="footer">Generado con Azure AI Foundry · Claude Code Evaluator</p>
 </body>
 </html>

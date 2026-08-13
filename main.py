@@ -410,6 +410,7 @@ async def generate_report(
         report = diagnose_with_azure(dev_name, dev_role, scored)
     except Exception:
         report = local_narrative(scored)
+    report["answers"] = scored["details"]
 
     html = templates.get_template("report_template.html").render(
         developer={"name": dev_name, "role": dev_role},
