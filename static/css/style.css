@@ -205,13 +205,10 @@ select {
   accent-color: var(--blue);
 }
 
-.option code {
-  display: inline;
-  font-size: 0.86em;
-  background: #e2e8f0;
-  padding: 1px 6px;
-  border-radius: 4px;
-  white-space: nowrap;
+.opt-letter {
+  display: inline-block;
+  min-width: 1.4em;
+  color: var(--blue);
 }
 
 .btn-ghost {

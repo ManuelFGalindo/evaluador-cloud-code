@@ -251,21 +251,38 @@ QUESTION_BANK = {
 }
 
 
-def _shuffle_options(item: dict) -> dict:
+def randomize_option_letters(item: dict) -> dict:
+    """Baraja opciones y las reetiqueta a/b/c/d para que la correcta no sea siempre A."""
     cloned = deepcopy(item)
+    correct_id = str(cloned.get("correct", ""))
+    correct_text = next(
+        (opt["text"] for opt in cloned["options"] if str(opt.get("id")) == correct_id),
+        cloned["options"][0]["text"],
+    )
     options = cloned["options"][:]
     random.shuffle(options)
-    cloned["options"] = options
+    letters = ["a", "b", "c", "d"]
+    relabeled = []
+    new_correct = "a"
+    for letter, opt in zip(letters, options):
+        text = str(opt.get("text", "")).strip()
+        relabeled.append({"id": letter, "text": text})
+        if text == correct_text:
+            new_correct = letter
+    cloned["options"] = relabeled
+    cloned["correct"] = new_correct
     return cloned
 
 
-def sample_fallback_quiz() -> list[dict]:
+def sample_fallback_quiz(count_per_level: int = 4) -> list[dict]:
     quiz = []
     index = 1
     for level in ("Principiante", "Intermedio", "Avanzado"):
-        picked = random.sample(QUESTION_BANK[level], k=4)
+        pool = QUESTION_BANK[level]
+        k = min(count_per_level, len(pool))
+        picked = random.sample(pool, k=k)
         for item in picked:
-            q = _shuffle_options(item)
+            q = randomize_option_letters(item)
             q["id"] = f"q{index}"
             q["level"] = level
             quiz.append(q)

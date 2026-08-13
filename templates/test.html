@@ -43,7 +43,7 @@
               {% for option in question.options %}
               <label class="option">
                 <input type="radio" name="{{ question.id }}" value="{{ option.id }}" required>
-                <span>{{ option.text }}</span>
+                <span><strong class="opt-letter">{{ option.id|upper }}.</strong> {{ option.text }}</span>
               </label>
               {% endfor %}
             </div>

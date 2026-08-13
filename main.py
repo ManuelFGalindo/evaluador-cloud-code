@@ -16,7 +16,8 @@ from starlette.background import BackgroundTask
 from starlette.middleware.sessions import SessionMiddleware
 from weasyprint import HTML
 
-from question_bank import sample_fallback_quiz
+from docs_digest import DOCS_DIGEST
+from question_bank import randomize_option_letters, sample_fallback_quiz
 
 load_dotenv()
 
@@ -48,29 +49,29 @@ LEVEL_META = {
     },
 }
 
-QUIZ_PROMPT = """
-Eres un examinador de Claude Code (Anthropic) según https://code.claude.com/docs/
-No confundas Claude Code con Google Cloud Code.
+QUIZ_PROMPT = f"""
+Eres un examinador de Claude Code (Anthropic). Usa SOLO estos hechos oficiales.
+No inventes URLs ni confundas Claude Code con Google Cloud Code.
+
+{DOCS_DIGEST}
 
 Genera un examen NUEVO de 12 preguntas de opción múltiple (4 opciones, 1 correcta).
-4 Principiante, 4 Intermedio, 4 Avanzado. Profundas, de escenario real, no triviales.
-Temas oficiales: CLI `claude`, login vs ANTHROPIC_API_KEY, Teams, /init, CLAUDE.md vs CLAUDE.local.md,
-auto memory, /context, /compact, plan mode, verificación con tests/build/screenshot, git/PRs,
-permissions vs CLAUDE.md, PreToolUse hooks, MCP, skills, subagents, claudeMdExcludes, settings.local.json, secretos.
+4 Principiante, 4 Intermedio, 4 Avanzado. Escenarios reales, no triviales.
+La letra correcta DEBE variar: no pongas todas en "a". Mezcla a, b, c y d.
 
 Responde SOLO JSON:
-{
+{{
   "questions": [
-    {
+    {{
       "id": "q1",
       "level": "Principiante",
       "prompt": "pregunta",
-      "options": [{"id": "a", "text": "..."}, {"id": "b", "text": "..."}, {"id": "c", "text": "..."}, {"id": "d", "text": "..."}],
-      "correct": "b"
-    }
+      "options": [{{"id": "a", "text": "..."}}, {{"id": "b", "text": "..."}}, {{"id": "c", "text": "..."}}, {{"id": "d", "text": "..."}}],
+      "correct": "c"
+    }}
   ]
-}
-ids q1..q12 en orden. correct debe ser el id de la opción correcta. Español.
+}}
+ids q1..q12. correct = id de la opción correcta. Español.
 """
 
 REPORT_PROMPT = """
@@ -197,15 +198,37 @@ def validate_quiz(payload: dict) -> list[dict]:
     return cleaned
 
 
+def fill_quiz_from_bank(partial: list[dict]) -> list[dict]:
+    """Si Foundry trae menos de 12, completa con el banco oficial."""
+    have = {item["prompt"] for item in partial}
+    needed = 12 - len(partial)
+    if needed <= 0:
+        return partial[:12]
+    extras = []
+    for item in sample_fallback_quiz(4):
+        if item["prompt"] in have:
+            continue
+        extras.append(item)
+        if len(extras) >= needed:
+            break
+    merged = partial + extras
+    for index, item in enumerate(merged[:12], start=1):
+        item["id"] = f"q{index}"
+    return merged[:12]
+
+
 def build_quiz() -> list[dict]:
+    quiz: list[dict] = []
     try:
         data = azure_json(
             QUIZ_PROMPT,
-            "Genera un set distinto al anterior. Varía escenarios (monorepo, CI, UI, secretos, hooks).",
+            "Genera un set distinto. Varía escenarios (Windows vs macOS, monorepo, CI, UI, secretos, hooks).",
         )
-        return validate_quiz(data)
+        quiz = validate_quiz(data)
     except Exception:
-        return sample_fallback_quiz()
+        quiz = []
+    quiz = fill_quiz_from_bank(quiz)
+    return [randomize_option_letters(item) for item in quiz]
 
 
 def group_questions(quiz: list[dict]) -> list[dict]:
