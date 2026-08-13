@@ -25,11 +25,18 @@ AZURE_MODEL = os.getenv("AZURE_AI_FOUNDRY_MODEL", "gpt-4o")
 
 
 def normalize_azure_endpoint(url: str) -> str:
-    """El SDK agrega /chat/completions; quita ese sufijo si viene en la URL."""
+    """Convierte URLs de Foundry/OpenAI al endpoint de inference que usa el SDK.
+
+    ChatCompletionsClient llama a {endpoint}/chat/completions.
+    - .../openai/v1/chat/completions  -> .../openai/v1
+    - .../api/projects/<proyecto>     -> .../models
+    """
     cleaned = (url or "").strip().rstrip("/")
-    suffix = "/chat/completions"
-    if cleaned.endswith(suffix):
-        cleaned = cleaned[: -len(suffix)].rstrip("/")
+    if cleaned.endswith("/chat/completions"):
+        cleaned = cleaned[: -len("/chat/completions")].rstrip("/")
+    match = re.match(r"(https?://[^/]+)/api/projects(?:/.*)?$", cleaned)
+    if match:
+        return f"{match.group(1)}/models"
     return cleaned
 
 CORRECT_ANSWERS = {
