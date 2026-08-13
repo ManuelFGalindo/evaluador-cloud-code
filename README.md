@@ -1,6 +1,6 @@
 # Evaluador Claude Code
 
-Aplicación web en **FastAPI** para evaluar habilidades de desarrolladores Fullstack en **Claude Code** (Anthropic) y asistencia de IA. Genera un diagnóstico con **Azure AI Foundry (GPT-4o)** y descarga un **informe PDF**.
+Aplicación web en **FastAPI** para evaluar habilidades de desarrolladores Fullstack en **Claude Code** (Anthropic) y asistencia de IA. Genera un diagnóstico con **Azure AI Foundry (GPT-5.1)** y descarga un **informe PDF**.
 
 Repositorio: [github.com/ManuelFGalindo/evaluador-cloud-code](https://github.com/ManuelFGalindo/evaluador-cloud-code)
 
@@ -61,9 +61,9 @@ cp .env.example .env
 Edita `.env` con tus credenciales:
 
 ```env
-AZURE_AI_FOUNDRY_ENDPOINT="https://tu-recurso.services.ai.azure.com/models"
+AZURE_AI_FOUNDRY_ENDPOINT="https://tu-recurso.services.ai.azure.com/openai/v1"
 AZURE_AI_FOUNDRY_KEY="tu-key"
-AZURE_AI_FOUNDRY_MODEL="gpt-4o"
+AZURE_AI_FOUNDRY_MODEL="gpt-5.1"
 ```
 
 ## Ejecución
@@ -98,7 +98,7 @@ Render elige Python 3.14 por defecto y **pydantic 2.7.4 no compila en 3.14**. Es
    - `PYTHON_VERSION` = `3.12.8`
    - `AZURE_AI_FOUNDRY_ENDPOINT`
    - `AZURE_AI_FOUNDRY_KEY`
-   - `AZURE_AI_FOUNDRY_MODEL` = `gpt-4o`
+   - `AZURE_AI_FOUNDRY_MODEL` = `gpt-5.1`
 6. Redeploy el servicio
 
 WeasyPrint usa el `Aptfile` de la raíz para instalar Pango/Cairo.

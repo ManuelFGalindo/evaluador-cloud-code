@@ -4,15 +4,14 @@ import re
 import tempfile
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlparse
 
-from azure.ai.inference import ChatCompletionsClient
-from azure.ai.inference.models import SystemMessage, UserMessage
-from azure.core.credentials import AzureKeyCredential
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from openai import OpenAI
 from starlette.background import BackgroundTask
 from weasyprint import HTML
 
@@ -21,23 +20,25 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent
 AZURE_ENDPOINT = os.getenv("AZURE_AI_FOUNDRY_ENDPOINT", "")
 AZURE_KEY = os.getenv("AZURE_AI_FOUNDRY_KEY", "")
-AZURE_MODEL = os.getenv("AZURE_AI_FOUNDRY_MODEL", "gpt-4o")
+AZURE_MODEL = os.getenv("AZURE_AI_FOUNDRY_MODEL", "gpt-5.1")
 
 
 def normalize_azure_endpoint(url: str) -> str:
-    """Convierte URLs de Foundry/OpenAI al endpoint de inference que usa el SDK.
+    """Normaliza el endpoint de Foundry a https://<host>/openai/v1.
 
-    ChatCompletionsClient llama a {endpoint}/chat/completions.
+    El cliente OpenAI llama a {base_url}/chat/completions (o /responses).
     - .../openai/v1/chat/completions  -> .../openai/v1
-    - .../api/projects/<proyecto>     -> .../models
+    - .../api/projects/<proyecto>     -> .../openai/v1
+    - .../models                      -> .../openai/v1
     """
     cleaned = (url or "").strip().rstrip("/")
     if cleaned.endswith("/chat/completions"):
         cleaned = cleaned[: -len("/chat/completions")].rstrip("/")
-    match = re.match(r"(https?://[^/]+)/api/projects(?:/.*)?$", cleaned)
-    if match:
-        return f"{match.group(1)}/models"
+    parsed = urlparse(cleaned)
+    if parsed.scheme and parsed.netloc:
+        return f"{parsed.scheme}://{parsed.netloc}/openai/v1"
     return cleaned
+
 
 CORRECT_ANSWERS = {
     "q1": "cd-claude",
@@ -95,12 +96,12 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
-def get_azure_client() -> Optional[ChatCompletionsClient]:
+def get_azure_client() -> Optional[OpenAI]:
     if not AZURE_ENDPOINT or not AZURE_KEY or "tu-key" in AZURE_KEY:
         return None
-    return ChatCompletionsClient(
-        endpoint=normalize_azure_endpoint(AZURE_ENDPOINT),
-        credential=AzureKeyCredential(AZURE_KEY),
+    return OpenAI(
+        base_url=normalize_azure_endpoint(AZURE_ENDPOINT),
+        api_key=AZURE_KEY,
     )
 
 
@@ -166,27 +167,53 @@ def parse_model_json(raw: str) -> dict:
     return json.loads(text)
 
 
+def extract_responses_text(response) -> str:
+    text = getattr(response, "output_text", None)
+    if text:
+        return text
+    chunks = []
+    for item in getattr(response, "output", None) or []:
+        for content in getattr(item, "content", None) or []:
+            piece = getattr(content, "text", None)
+            if piece:
+                chunks.append(piece)
+    if chunks:
+        return "\n".join(chunks)
+    return str(response)
+
+
 def diagnose_with_azure(dev_name: str, dev_role: str, answers: dict) -> dict:
     client = get_azure_client()
     if client is None:
         return local_score(answers)
 
-    response = client.complete(
-        messages=[
-            SystemMessage(content=SYSTEM_PROMPT),
-            UserMessage(
-                content=(
-                    f"Desarrollador: {dev_name}\n"
-                    f"Rol: {dev_role}\n"
-                    f"Respuestas: {json.dumps(answers, ensure_ascii=False)}"
-                )
-            ),
-        ],
-        model=AZURE_MODEL,
-        response_format={"type": "json_object"},
-        temperature=0.2,
+    user_content = (
+        f"Desarrollador: {dev_name}\n"
+        f"Rol: {dev_role}\n"
+        f"Respuestas: {json.dumps(answers, ensure_ascii=False)}"
     )
-    return parse_model_json(response.choices[0].message.content)
+
+    try:
+        response = client.chat.completions.create(
+            model=AZURE_MODEL,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_content},
+            ],
+            response_format={"type": "json_object"},
+        )
+        raw = response.choices[0].message.content or ""
+    except Exception:
+        response = client.responses.create(
+            model=AZURE_MODEL,
+            input=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_content},
+            ],
+        )
+        raw = extract_responses_text(response)
+
+    return parse_model_json(raw)
 
 
 def cleanup_file(path: str) -> None:
