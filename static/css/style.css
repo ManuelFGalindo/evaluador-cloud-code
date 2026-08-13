@@ -214,12 +214,28 @@ select {
   white-space: nowrap;
 }
 
-.meta {
+.btn-ghost {
+  display: inline-block;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  color: var(--navy);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: white;
+  width: auto;
+}
+
+.btn-ghost:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.meta-actions {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
   gap: 12px;
-  margin-bottom: 18px;
-  color: var(--muted);
 }
 
 .loading {

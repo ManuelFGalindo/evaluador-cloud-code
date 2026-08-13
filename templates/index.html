@@ -15,9 +15,9 @@
       </div>
       <h1>Evaluación de habilidades Fullstack</h1>
       <p class="lead">
-        Diagnóstico de Claude Code por niveles (Principiante, Intermedio, Avanzado), según la documentación oficial.
+        Diagnóstico de Claude Code por niveles. Cada sesión genera un cuestionario distinto con Azure AI Foundry.
       </p>
-      <form method="post" action="/start-eval">
+      <form method="post" action="/start-eval" id="start-form">
         <label for="dev_name">Nombre completo del desarrollador</label>
         <input id="dev_name" name="dev_name" type="text" required placeholder="Ej. Ana Pérez">
 
@@ -32,9 +32,19 @@
           <option>DevOps / Platform</option>
         </select>
 
-        <button class="btn" type="submit">Iniciar Evaluación</button>
+        <button class="btn" id="start-btn" type="submit">Iniciar Evaluación</button>
+        <p class="loading" id="start-loading">Generando preguntas de esta sesión…</p>
       </form>
     </section>
   </main>
+  <script>
+    const startForm = document.getElementById("start-form");
+    const startBtn = document.getElementById("start-btn");
+    const startLoading = document.getElementById("start-loading");
+    startForm.addEventListener("submit", () => {
+      startBtn.disabled = true;
+      startLoading.style.display = "block";
+    });
+  </script>
 </body>
 </html>

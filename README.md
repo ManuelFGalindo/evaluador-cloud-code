@@ -13,9 +13,9 @@ Repositorio: [github.com/ManuelFGalindo/evaluador-cloud-code](https://github.com
 
 ## Módulos de evaluación
 
-- **Principiante** — instalar/arrancar `claude`, login, Teams, `CLAUDE.md` y `/init`
-- **Intermedio** — contexto, plan mode, verificación con tests/screenshots, git/PRs
-- **Avanzado** — `permissions`, hooks, MCP y secretos
+- **Principiante / Intermedio / Avanzado** — 12 preguntas **dinámicas** por sesión (Azure AI Foundry + docs oficiales)
+- El PDF usa el **puntaje objetivo** de aciertos; el modelo solo redacta el diagnóstico
+- Botón **Cerrar sesión** para volver al inicio
 
 Documentación oficial: [code.claude.com/docs](https://code.claude.com/docs/)
 
