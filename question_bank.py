@@ -274,7 +274,7 @@ def randomize_option_letters(item: dict) -> dict:
     return cloned
 
 
-def sample_fallback_quiz(count_per_level: int = 4) -> list[dict]:
+def sample_fallback_quiz(count_per_level: int = 8) -> list[dict]:
     quiz = []
     index = 1
     for level in ("Principiante", "Intermedio", "Avanzado"):

@@ -7,19 +7,19 @@ Repositorio: [github.com/ManuelFGalindo/evaluador-cloud-code](https://github.com
 ## Flujo
 
 1. Registro del desarrollador (nombre y rol)
-2. Cuestionario técnico en 4 módulos
+2. Cuestionario técnico en 3 niveles (24 preguntas)
 3. Diagnóstico con Azure AI Foundry
 4. Generación y descarga del informe PDF
 
 ## Módulos de evaluación
 
-- **Principiante / Intermedio / Avanzado** — 12 preguntas **dinámicas** por sesión (Azure AI Foundry + docs oficiales)
+- **Principiante / Intermedio / Avanzado** — 24 preguntas **dinámicas** por sesión (8 por nivel; ~45 min)
 - El PDF usa el **puntaje objetivo** de aciertos; el modelo solo redacta el diagnóstico
 - Botón **Cerrar sesión** para volver al inicio
 
 Documentación oficial: [code.claude.com/docs](https://code.claude.com/docs/)
 
-El informe incluye puntaje (%), nivel (Principiante / Intermedio / Avanzado), resumen ejecutivo, brechas de capacitación y una ruta semanal sugerida.
+El informe incluye puntaje (%), nivel (Principiante / Intermedio / Avanzado), resumen ejecutivo, brechas de capacitación, sugerencias (tema y detalle, sin tiempos) y revisión de respuestas.
 
 ## Estructura
 

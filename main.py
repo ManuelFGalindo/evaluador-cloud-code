@@ -29,6 +29,8 @@ AZURE_MODEL = os.getenv("AZURE_AI_FOUNDRY_MODEL", "gpt-5.1")
 SESSION_SECRET = os.getenv("SESSION_SECRET", "evaluador-claude-code-cambia-esto")
 
 LEVEL_ORDER = ("Principiante", "Intermedio", "Avanzado")
+QUESTIONS_PER_LEVEL = 8
+QUIZ_SIZE = QUESTIONS_PER_LEVEL * len(LEVEL_ORDER)
 LEVEL_META = {
     "Principiante": {
         "title": "Instalación, login y memoria del proyecto",
@@ -56,8 +58,9 @@ No inventes URLs ni confundas Claude Code con Google Cloud Code.
 
 {DOCS_DIGEST}
 
-Genera un examen NUEVO de 12 preguntas de opción múltiple (4 opciones, 1 correcta).
-4 Principiante, 4 Intermedio, 4 Avanzado. Escenarios reales, no triviales.
+Genera un examen NUEVO de {QUIZ_SIZE} preguntas de opción múltiple (4 opciones, 1 correcta).
+{QUESTIONS_PER_LEVEL} Principiante, {QUESTIONS_PER_LEVEL} Intermedio, {QUESTIONS_PER_LEVEL} Avanzado.
+Escenarios reales, no triviales. Dimensionado para resolverlo en 45 minutos.
 La letra correcta DEBE variar: no pongas todas en "a". Mezcla a, b, c y d.
 
 Responde SOLO JSON:
@@ -72,7 +75,7 @@ Responde SOLO JSON:
     }}
   ]
 }}
-ids q1..q12. correct = id de la opción correcta. Español.
+ids q1..q{QUIZ_SIZE}. correct = id de la opción correcta. Español.
 """
 
 REPORT_PROMPT = """
@@ -90,9 +93,10 @@ Responde SOLO JSON:
   "summary": "2-4 oraciones",
   "strengths": ["..."],
   "gaps": ["..."],
-  "training_plan": [{"week": "Semana 1 · Principiante", "topic": "...", "desc": "... enlace code.claude.com/docs ..."}]
+  "training_plan": [{"topic": "...", "desc": "... enlace code.claude.com/docs ..."}]
 }
-Español, profesional. Plan de 3 semanas, una por nivel.
+Español, profesional. Capacitación: 3 a 5 ítems con SOLO tema y detalle.
+NO indiques semanas, días, horas ni duración. El detalle debe decir qué estudiar y el enlace, no cuándo.
 """
 
 
@@ -173,22 +177,24 @@ def azure_json(system_prompt: str, user_content: str) -> dict:
 
 def validate_quiz(payload: dict) -> list[dict]:
     questions = payload.get("questions") or []
-    if len(questions) != 12:
-        raise ValueError("Se esperaban 12 preguntas")
     cleaned = []
-    for index, item in enumerate(questions, start=1):
+    for item in questions:
         options = item.get("options") or []
         if len(options) != 4:
-            raise ValueError("Cada pregunta necesita 4 opciones")
+            continue
         correct = str(item.get("correct", "")).strip()
         option_ids = {str(opt.get("id")) for opt in options}
         if correct not in option_ids:
-            raise ValueError("La opción correcta no está en las opciones")
+            continue
+        prompt = str(item.get("prompt", "")).strip()
+        if not prompt:
+            continue
+        fallback_level = LEVEL_ORDER[min(len(cleaned) // QUESTIONS_PER_LEVEL, len(LEVEL_ORDER) - 1)]
         cleaned.append(
             {
-                "id": f"q{index}",
-                "level": item.get("level") if item.get("level") in LEVEL_ORDER else LEVEL_ORDER[(index - 1) // 4],
-                "prompt": str(item.get("prompt", "")).strip(),
+                "id": f"q{len(cleaned) + 1}",
+                "level": item.get("level") if item.get("level") in LEVEL_ORDER else fallback_level,
+                "prompt": prompt,
                 "options": [
                     {"id": str(opt.get("id")), "text": str(opt.get("text", "")).strip()}
                     for opt in options
@@ -196,26 +202,40 @@ def validate_quiz(payload: dict) -> list[dict]:
                 "correct": correct,
             }
         )
+    if not cleaned:
+        raise ValueError(f"Se esperaban preguntas válidas (objetivo {QUIZ_SIZE})")
     return cleaned
 
 
 def fill_quiz_from_bank(partial: list[dict]) -> list[dict]:
-    """Si Foundry trae menos de 12, completa con el banco oficial."""
-    have = {item["prompt"] for item in partial}
-    needed = 12 - len(partial)
-    if needed <= 0:
-        return partial[:12]
-    extras = []
-    for item in sample_fallback_quiz(4):
-        if item["prompt"] in have:
+    """Completa hasta 8 preguntas por nivel con el banco oficial."""
+    by_level = {level: [] for level in LEVEL_ORDER}
+    seen = set()
+    for item in partial:
+        level = item.get("level")
+        prompt = item.get("prompt", "")
+        if level not in LEVEL_ORDER or prompt in seen:
             continue
-        extras.append(item)
-        if len(extras) >= needed:
-            break
-    merged = partial + extras
-    for index, item in enumerate(merged[:12], start=1):
+        if len(by_level[level]) >= QUESTIONS_PER_LEVEL:
+            continue
+        seen.add(prompt)
+        by_level[level].append(item)
+
+    for item in sample_fallback_quiz(QUESTIONS_PER_LEVEL):
+        level = item["level"]
+        if item["prompt"] in seen:
+            continue
+        if len(by_level[level]) >= QUESTIONS_PER_LEVEL:
+            continue
+        seen.add(item["prompt"])
+        by_level[level].append(item)
+
+    merged = []
+    for level in LEVEL_ORDER:
+        merged.extend(by_level[level][:QUESTIONS_PER_LEVEL])
+    for index, item in enumerate(merged, start=1):
         item["id"] = f"q{index}"
-    return merged[:12]
+    return merged
 
 
 def build_quiz() -> list[dict]:
@@ -309,17 +329,14 @@ def local_narrative(scored: dict) -> dict:
         ],
         "training_plan": [
             {
-                "week": "Semana 1 · Principiante",
                 "topic": "Setup y CLAUDE.md",
                 "desc": "https://code.claude.com/docs/en/quickstart y https://code.claude.com/docs/en/memory",
             },
             {
-                "week": "Semana 2 · Intermedio",
                 "topic": "Plan mode y verificación",
                 "desc": "https://code.claude.com/docs/en/best-practices",
             },
             {
-                "week": "Semana 3 · Avanzado",
                 "topic": "Permisos, hooks y MCP",
                 "desc": "https://code.claude.com/docs/en/permissions y https://code.claude.com/docs/en/mcp",
             },
@@ -337,7 +354,22 @@ def diagnose_with_azure(dev_name: str, dev_role: str, scored: dict) -> dict:
     report["score"] = scored["score"]
     report["level"] = scored["level"]
     report["level_scores"] = scored["level_scores"]
+    report["training_plan"] = normalize_training_plan(report.get("training_plan"))
+    if not report["training_plan"]:
+        report["training_plan"] = local_narrative(scored)["training_plan"]
     return report
+
+
+def normalize_training_plan(plan) -> list[dict]:
+    rows = []
+    for item in plan or []:
+        if not isinstance(item, dict):
+            continue
+        topic = str(item.get("topic") or item.get("tema") or "").strip()
+        desc = str(item.get("desc") or item.get("detalle") or item.get("detail") or "").strip()
+        if topic and desc:
+            rows.append({"topic": topic, "desc": desc})
+    return rows
 
 
 def quiz_signer() -> URLSafeTimedSerializer:

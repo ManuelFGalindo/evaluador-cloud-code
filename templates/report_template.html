@@ -154,11 +154,10 @@
     </ul>
   </div>
 
-  <h2>Ruta de capacitación semanal</h2>
+  <h2>Sugerencias de capacitación</h2>
   <table class="plan">
     <thead>
       <tr>
-        <th>Semana</th>
         <th>Tema</th>
         <th>Detalle</th>
       </tr>
@@ -166,7 +165,6 @@
     <tbody>
       {% for item in report.training_plan %}
       <tr>
-        <td>{{ item.week }}</td>
         <td>{{ item.topic }}</td>
         <td>{{ item.desc }}</td>
       </tr>
